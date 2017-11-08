@@ -1,0 +1,15 @@
+break main
+disable $bpnum
+break *0x565559c6
+disable $bpnum
+break main
+
+
+
+
+
+
+
+
+
+
