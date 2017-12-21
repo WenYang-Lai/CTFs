@@ -51,7 +51,7 @@ So, there is a overlap chunk at ```0x00005615ddaf6030```, and heap top at ```0x0
 Next, add three secret with size 0x40(```secret[0]```), 0x80(```secret[2]```), and 0x80(```secret[3]```), respectively.
 Our goal is launching unsorted bin attack on secret[2] chunk. In the first chunk, we modify the secret[1] chunk header to 0x81. And secret[3] make our partial fake ```_IO_FILE```, ```vtable```, ```wide_date``` objects.
 
-#### _IO_FILE structrue
+#### _IO_FILE structure
 ```
 0x00:		 -----------------------------
 		|        '/bin/sh\x00'        |
