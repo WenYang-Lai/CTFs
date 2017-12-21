@@ -77,7 +77,7 @@ Our goal is launching unsorted bin attack on secret[2] chunk. In the first chunk
 0xe0:		 -----------------------------
 ```
 #### wide_data structure
-```clike=
+```c
 struct _IO_wide_data
 {
   wchar_t *_IO_read_ptr;	/* Current read pointer */
@@ -94,7 +94,7 @@ struct _IO_wide_data
  ```
 
 #### vtable structure
-```clike=
+```c
 struct _IO_jump_t
 {
     JUMP_FIELD(_G_size_t, __dummy);
