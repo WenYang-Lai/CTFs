@@ -1,0 +1,13 @@
+b *0x400fd0
+b *0x400e8e
+
+b *0x400ce0
+commands
+set {byte}0x7fffffffe72b = 0xff
+c
+end
+
+r < payload
+set {int}0x6020c0 = 100000000
+c
+  
