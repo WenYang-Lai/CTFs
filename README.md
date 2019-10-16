@@ -2,13 +2,28 @@
 Some Writes-up, including homework of NCTU
 
 
+# patching
+
+### hexedit patching function as isnan
+
+
+# heap
+
 ### House of lore
 
 smallbin bk fake chunk
 
-### House of orange
+### House of orange (before libc2.29)
 
 File Oriented programming 
+
+### large bin attack
+
+- faked unsorted bin with large bin size
+- overwrite existing largebin bk, bk->bk_nextsize
+
+* need two address was rw permission
+
 
 ### Tcache table
 - tcache bin size 7
